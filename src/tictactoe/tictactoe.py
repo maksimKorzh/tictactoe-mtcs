@@ -19,17 +19,22 @@ class Board():
         # define game board
         self.position = {}
         
+        # reset board
+        self.reset_board()
+        
+        # if opponent to play
+        if opponent is not None:            
+            # copy opponents board state
+            self.__dict__ = deepcopy(opponent.__dict__)
+
+    # reset board
+    def reset_board(self):
         # loop over board rows
         for row in range(3):
             # loop over board columns
             for col in range(3):
                 # set empty square at board coordinates [row, col]
                 self.position[row, col] = self.empty_square
-        
-        # if opponent to play
-        if opponent is not None:            
-            # copy opponents board state
-            self.__dict__ = deepcopy(opponent.__dict__)
 
     # make move
     def make_move(self, col, row):
@@ -44,7 +49,107 @@ class Board():
         
         # return opponent's board state
         return board
+    
+    # draw detection
+    def is_draw(self):
+        # loop over board squares
+        for row, col in self.position:
+            # if empty square still available on board
+            if self.position[row, col] == self.empty_square:
+                # game is going on
+                return False
         
+        # otherwise game is drawn
+        return True
+    
+    # win detection
+    def is_win(self):
+        #
+        # horizontal sequence detection
+        #
+        
+        # loop over board rows
+        for row in range(3):
+            # winning sequence list
+            winning = []
+            
+            # loop over board columns
+            for col in range(3):
+                # found player 2 move
+                if self.position[row, col] == self.player_2:
+                    # append move to winning sequence
+                    winning.append((row, col))
+                
+                # if three in the row
+                if len(winning) == 3:
+                    return True
+        
+        #
+        # vertical sequence detection
+        #
+        
+        # loop over board rows
+        for col in range(3):
+            # winning sequence list
+            winning = []
+            
+            # loop over board columns
+            for row in range(3):
+                # found player 2 move
+                if self.position[row, col] == self.player_2:
+                    # append move to winning sequence
+                    winning.append((row, col))
+                
+                # if three in the row
+                if len(winning) == 3:
+                    return True
+        
+        #
+        # 1st diagonal sequence detection
+        #
+        
+        # winning sequence list
+        winning = []
+        
+        # loop over board rows
+        for row in range(3):
+            # set col equal to row
+            col = row
+                
+            # found player 2 move
+            if self.position[row, col] == self.player_2:
+                # append move to winning sequence
+                winning.append((row, col))
+            
+        # if three in the row
+        if len(winning) == 3:
+            return True
+        
+        #
+        # 2nd diagonal sequence detection
+        #
+        
+        # winning sequence list
+        winning = []
+        
+        # loop over board rows
+        for row in range(3):
+            # set col equal to row
+            col = 3 - row - 1
+                
+            # found player 2 move
+            if self.position[row, col] == self.player_2:
+                # append move to winning sequence
+                winning.append((row, col))
+            
+        # if three in the row
+        if len(winning) == 3:
+            return True
+        
+        # by defualt
+        return False
+            
+    
     # play versus human loop
     def play_human_loop(self):
         # print game greetings
@@ -85,6 +190,18 @@ class Board():
                 
                 # print board
                 print(self)
+                
+                # on win
+                if self.is_win():
+                    print('Player "%s" won!' % self.player_2)
+                    self.reset_board()
+                    print(self)
+                
+                # on draw
+                elif self.is_draw():
+                    print('Game is drawn!')
+                    self.reset_board()
+                    print(self)
 
             except:
                 print('Illegal command!')
@@ -119,7 +236,7 @@ class Board():
 if __name__ == '__main__':
     # init board instance
     board = Board()
-    
+            
     # run Human vs Human game
     board.play_human_loop()
 
