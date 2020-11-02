@@ -6,6 +6,7 @@
 
 # packages
 from copy import deepcopy
+from mcts import *
 
 # tictactoe board class
 class Board():
@@ -149,9 +150,25 @@ class Board():
         # by defualt
         return False
             
+    # generate moves
+    def generate_moves(self):
+        # init move list
+        moves = []
+        
+        # loop over board squares
+        for row in range(3):
+            # loop over board columns
+            for col in range(3):
+                # make move only if square is empty
+                if self.position[row, col] == self.empty_square:
+                    # append move to move list
+                    moves.append(self.make_move(col, row))
+        
+        # return list of moves
+        return moves
     
-    # play versus human loop
-    def play_human_loop(self):
+    # play versus AI loop
+    def play_ai_loop(self):
         # print game greetings
         print('\n\n    Tic Tac Toe (Human vs Human mode) by Code Monkey King\n')
         print('print move in format [column][row]: "0,0" or "exit" to quit\n')
@@ -161,7 +178,7 @@ class Board():
         
         # get user input
         user_input = ''
-        
+                
         # game loop
         while True:            
             # get user input
@@ -185,8 +202,18 @@ class Board():
                     print('Illegal move!')
                     continue
                 
-                # make move
+                # make human move
                 self = self.make_move(col, row)
+
+                # create mcts instance
+                mcts = MCTS()
+    
+                # find best move
+                best_move = mcts.search(self)
+
+                # make AI move
+                if best_move:
+                    self = best_move.board
                 
                 # print board
                 print(self)
@@ -203,9 +230,10 @@ class Board():
                     self.reset_board()
                     print(self)
 
-            except:
-                print('Illegal command!')
-
+            except Exception as e:
+                print(e)
+                print('Illegal command!')        
+    
     # print board
     def __str__(self):
         # define board string
@@ -232,16 +260,30 @@ class Board():
         
         # return board representation as string
         return board_string
-
+    
+    ########################
+    def isTerminal(self):
+        return self.is_win()
+    
+    def getPossibleActions(self):
+        return self.generate_moves()
+    
+    def takeAction(self, board):
+        return board
+    
+    def getReward(self):
+        if self.is_draw(): return 0
+        elif self.is_win(): return 1
+    
+    def getCurrentPlayer(self):
+        if self.player_2 == 'x': return 1
+        elif self.player_2 == 'o': return 0
 if __name__ == '__main__':
     # init board instance
     board = Board()
-            
-    # run Human vs Human game
-    board.play_human_loop()
-
-
-
+    
+    # play versus AI
+    board.play_ai_loop()
 
 
 
