@@ -37,7 +37,7 @@ class Board():
     
     # make move
     def make_move(self, row, col):
-        # create new board instance
+        # create new board instance that inherits from the current state
         board = Board(self)
         
         # make move
@@ -151,6 +151,23 @@ class Board():
         
         # by default return non winning state
         return False
+    
+    # generate legal moves to play in the current position
+    def generate_states(self):
+        # define states list (move list - list of available actions to consider)
+        actions = []
+        
+        # loop over board rows
+        for row in range(3):
+            # loop over board columns
+            for col in range(3):
+                # make sure that current square is empty
+                if self.position[row, col] == self.empty_square:
+                    # append available action/board state to action list
+                    actions.append(self.make_move(row, col))
+        
+        # return the list of available actions (board class instances)
+        return actions
         
     # print board state
     def __str__(self):
@@ -180,30 +197,34 @@ class Board():
 if __name__ == '__main__':
     # create board instance
     board = Board()
-
-    # define custom board state
-    board.position = {
-        (0, 0): 'o', (0, 1): 'o', (0, 2): 'x',
-        (1, 0): 'x', (1, 1): 'x', (1, 2): 'o',
-        (2, 0): 'o', (2, 1): 'o', (2, 2): 'x',
-    }
-    
-    # swap players manually
-    board.player_2 = 'x'
-    board.player_1 = 'o'
-    
-    # print board
+    print('This is initial board state:')
     print(board)
-    print('player_2: "%s"' % board.player_2)
-    
-    # distinguish between won and drawn states
-    if board.is_win():
-        print('Game is won:', board.is_win())
-    else:
-        print('Game is drawn:', board.is_draw())
 
+    # generate available actions
+    actions = board.generate_states()
     
+    # take action (make move on board)
+    board = actions[0]
     
+    # print updated board state
+    print('first generated move has been made on board:')
+    print(board)
+    
+    # generate available actions after first move has been made
+    actions = board.generate_states()
+
+    # take action (make move on board)
+    board = actions[3]
+    print(board)
+
+    # generate available actions after first move has been made
+    actions = board.generate_states()
+    
+    print('\n\n\n\n Generating states...')
+    # loop over generated action
+    for action in actions:
+        # print current action
+        print(action)
     
     
     

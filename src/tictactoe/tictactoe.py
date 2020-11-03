@@ -170,7 +170,7 @@ class Board():
     # play versus AI loop
     def play_ai_loop(self):
         # print game greetings
-        print('\n\n    Tic Tac Toe (Human vs Human mode) by Code Monkey King\n')
+        print('\n\n    Tic Tac Toe by Code Monkey King\n')
         print('print move in format [column][row]: "0,0" or "exit" to quit\n')
         
         # print board
@@ -260,41 +260,13 @@ class Board():
         
         # return board representation as string
         return board_string
-    
-    ########################
-    def isTerminal(self):
-        return self.is_win()
-    
-    def getPossibleActions(self):
-        return self.generate_moves()
-    
-    def takeAction(self, board):
-        return board
-    
-    def getReward(self):
-        if self.is_draw(): return 0
-        elif self.is_win(): return 1
-    
-    def getCurrentPlayer(self):
-        if self.player_2 == 'x': return 1
-        elif self.player_2 == 'o': return 0
+
 if __name__ == '__main__':
     # init board instance
     board = Board()
     
-    
-    board.position = {
-        (0, 0): 'x', (0, 1): 'x', (0, 2): 'x',
-        (1, 0): 'x', (1, 1): 'o', (1, 2): 'o',
-        (2, 0): 'o', (2, 1): 'x', (2, 2): 'x',
-    }
-
-    # print board state
-    print(board)
-    board.player_2 = 'x'
-    print('win state:', board.is_win())
     # play versus AI
-    #board.play_ai_loop()
+    board.play_ai_loop()
 
 
 

@@ -38,7 +38,7 @@ class Board():
     # make move
     def make_move(self, row, col):
         # create new board instance
-        board = Board()
+        board = Board(self)
         
         # make move
         board.position[row, col] = self.player_1
