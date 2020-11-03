@@ -282,8 +282,19 @@ if __name__ == '__main__':
     # init board instance
     board = Board()
     
+    
+    board.position = {
+        (0, 0): 'x', (0, 1): 'x', (0, 2): 'x',
+        (1, 0): 'x', (1, 1): 'o', (1, 2): 'o',
+        (2, 0): 'o', (2, 1): 'x', (2, 2): 'x',
+    }
+
+    # print board state
+    print(board)
+    board.player_2 = 'x'
+    print('win state:', board.is_win())
     # play versus AI
-    board.play_ai_loop()
+    #board.play_ai_loop()
 
 
 
