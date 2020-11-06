@@ -1,143 +1,191 @@
 #
-# MCTS class implementation
+# MCTS algorithm implementation
 #
 
 # packages
-import random
 import math
+import random
 
-# define tree node class
+# tree node class definition
 class TreeNode():
+    # class constructor (create tree node class instance)
     def __init__(self, board, parent):
+        # init associated board state
         self.board = board
         
-        if board.is_win() or board.is_draw():
+        # init is node terminal flag
+        if self.board.is_win() or self.board.is_draw():
+            # we have a terminal node
             self.is_terminal = True
+        
+        # otherwise
         else:
+            # we have a non-terminal node
             self.is_terminal = False
-
+        
+        # init is fully expanded flag
         self.is_fully_expanded = self.is_terminal
+        
+        # init parent node if available
         self.parent = parent
+        
+        # init the number of node visits
         self.visits = 0
-        self.total_score = 0
+        
+        # init the total score of the node
+        self.score = 0
+        
+        # init current node's children
         self.children = {}
 
 # MCTS class definition
 class MCTS():
-    # exploration constant
-    constant = 2#1 / math.sqrt(2)
-
-    # search best move
+    # search for the best move in the current position
     def search(self, initial_state):
         # create root node
         self.root = TreeNode(initial_state, None)
 
-        # search iterations
+        # walk through 1000 iterations
         for iteration in range(1000):
-            # select node
-            node = self.select_node(self.root)
-
-            # rollout
-            score = self.rollout(node.board)        
-
-            # backpropagation
+            # select a node (selection phase)
+            node = self.select(self.root)
+            
+            # scrore current node (simulation phase)
+            score = self.rollout(node.board)
+            
+            # backpropagate results
             self.backpropagate(node, score)
-
-        # get best move
+        
+        # pick up the best move in the current position
         try:
             return self.get_best_move(self.root, 0)
+        
         except:
-            return False
-
-    # select node
-    def select_node(self, node):
-        # if not is not the won position
+            pass
+    
+    # select most promising node
+    def select(self, node):
+        # make sure that we're dealing with non-terminal nodes
         while not node.is_terminal:
-            
-            # figure out whether the node is expanded or not
+            # case where the node is fully expanded
             if node.is_fully_expanded:
-                # get best move for fully expanded node
-                node = self.get_best_move(node, self.constant)
+                node = self.get_best_move(node, 2)
             
-            # otherwise expand node
+            # case where the node is not fully expanded 
             else:
+                # otherwise expand the node
                 return self.expand(node)
-
-        # otherwise we have a won position in the node, so just return it
+       
+        # return node
         return node
-
+    
     # expand node
     def expand(self, node):
-        # generate moves
-        moves = node.board.generate_moves()
+        # generate legal states (moves) for the given node
+        states = node.board.generate_states()
         
-        # loop over moves
-        for move in moves:    
-            # make sure move is not available in child nodes
-            if str(move.position) not in node.children:
-                # create new node for current move
-                new_node = TreeNode(move, node)
+        # loop over generated states (moves)
+        for state in states:
+            # make sure that current state (move) is not present in child nodes
+            if str(state.position) not in node.children:
+                # create a new node
+                new_node = TreeNode(state, node)
                 
-                # add new node to child nodes '<board>': '<new_node>'
-                node.children[str(move.position)] = new_node
-
-                # get fully expanded condition
-                if len(moves) == len(node.children):
-                    # set fully expanded flag
+                # add child node to parent's node children list (dict)
+                node.children[str(state.position)] = new_node
+                
+                # case when node is fully expanded
+                if len(states) == len(node.children):
                     node.is_fully_expanded = True
-
-                # return new node
-                return new_node
-
-        print('Should never get here!')
                 
-    # random rollout
-    def rollout(self, board):
-        # make random moves until reach the end of games
-        while not board.is_win():
-            try:
-                # make move on board
-                board = random.choice(board.generate_moves())
-
-            except:
-                # draw
-                return 0
-
-        # get score
-        if board.is_win() and board.player_2 == 'x': return 1
-        elif board.is_win() and board.player_2 == 'o': return -1
+                # return newly created node
+                return new_node
         
-    # backpropagation
+        # debugging
+        print('Should not get here!!!')
+    
+    # simulate the game via making random moves until reach end of the game
+    def rollout(self, board):
+        # make random moves for both sides until terminal state of the game is reached
+        while not board.is_win():
+            # try to make a move
+            try:
+                # make the on board
+                board = random.choice(board.generate_states())
+                
+            # no moves available
+            except:
+                # return a draw score
+                return 0
+        
+        # return score from the player "x" perspective
+        if board.player_2 == 'x': return 1
+        elif board.player_2 == 'o': return -1
+                
+    # backpropagate the number of visits and score up to the root node
     def backpropagate(self, node, score):
+        # update nodes's up to root node
         while node is not None:
+            # update node's visits
             node.visits += 1
-            node.total_score += score
+            
+            # update node's score
+            node.score += score
+            
+            # set node to parent
             node = node.parent
     
-    # get best move (UCB1 formula)
-    def get_best_move(self, node, constant):
-        # define best and best nodes list
+    # select the best node basing on UCB1 formula
+    def get_best_move(self, node, exploration_constant):
+        # define best score & best moves
         best_score = float('-inf')
         best_moves = []
         
-        # loop over root node's children
-        for move in node.children.values():
-            # get current player
-            if move.board.player_2 == 'o': player = -1
-            elif move.board.player_2 == 'x': player = 1
-
-            # get best score via applying UCB1 formula
-            move_score = player * move.total_score / move.visits + constant * math.sqrt(2 * math.log(node.visits) / move.visits)
+        # loop over child nodes
+        for child_node in node.children.values():
+            # define current player
+            if child_node.board.player_2 == 'x': current_player = 1
+            elif child_node.board.player_2 == 'o': current_player = -1
             
-            # if score is increased
+            # get move score using UCT formula
+            move_score = current_player * child_node.score / child_node.visits + exploration_constant * math.sqrt(math.log(node.visits / child_node.visits))                                        
+
+            # better move has been found
             if move_score > best_score:
-                # update best score and best nodes
                 best_score = move_score
-                best_moves = [move]
+                best_moves = [child_node]
             
+            # found as good move as already available
             elif move_score == best_score:
-                best_moves.append(move)
-
-        return random.choice(best_moves)
+                best_moves.append(child_node)
             
+        # return one of the best moves randomly
+        return random.choice(best_moves)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

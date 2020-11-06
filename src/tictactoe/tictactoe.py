@@ -1,5 +1,5 @@
 #
-# AI that learns to play tictactoe using
+# AI that learns to play Tic Tac Toe using
 #        reinforcement learning
 #             (MCTS + NN)
 #
@@ -8,277 +8,276 @@
 from copy import deepcopy
 from mcts import *
 
-# tictactoe board class
+# Tic Tac Toe board class
 class Board():
-    # init tictactoe instance
-    def __init__(self, opponent=None):
-        # define game parameters
+    # create constructor (init board class instance)
+    def __init__(self, board=None):
+        # define players
         self.player_1 = 'x'
         self.player_2 = 'o'
         self.empty_square = '.'
         
-        # define game board
+        # define board position
         self.position = {}
         
-        # reset board
-        self.reset_board()
+        # init (reset) board
+        self.init_board()
         
-        # if opponent to play
-        if opponent is not None:            
-            # copy opponents board state
-            self.__dict__ = deepcopy(opponent.__dict__)
-
-    # reset board
-    def reset_board(self):
+        # create a copy of a previous board state if available
+        if board is not None:
+            self.__dict__ = deepcopy(board.__dict__)
+    
+    # init (reset) board
+    def init_board(self):
         # loop over board rows
         for row in range(3):
             # loop over board columns
             for col in range(3):
-                # set empty square at board coordinates [row, col]
+                # set every board square to empty square
                 self.position[row, col] = self.empty_square
-
+    
     # make move
-    def make_move(self, col, row):
-        # create opponents tictactoe instance
+    def make_move(self, row, col):
+        # create new board instance that inherits from the current state
         board = Board(self)
         
         # make move
         board.position[row, col] = self.player_1
         
-        # switch side to move
+        # swap players
         (board.player_1, board.player_2) = (board.player_2, board.player_1)
-        
-        # return opponent's board state
+    
+        # return new board state
         return board
     
-    # draw detection
+    # get whether the game is drawn
     def is_draw(self):
         # loop over board squares
         for row, col in self.position:
-            # if empty square still available on board
+            # empty square is available
             if self.position[row, col] == self.empty_square:
-                # game is going on
+                # this is not a draw
                 return False
         
-        # otherwise game is drawn
+        # by default we return a draw
         return True
     
-    # win detection
+    # get whether the game is won
     def is_win(self):
-        #
-        # horizontal sequence detection
-        #
-        
-        # loop over board rows
-        for row in range(3):
-            # winning sequence list
-            winning = []
-            
-            # loop over board columns
-            for col in range(3):
-                # found player 2 move
-                if self.position[row, col] == self.player_2:
-                    # append move to winning sequence
-                    winning.append((row, col))
-                
-                # if three in the row
-                if len(winning) == 3:
-                    return True
-        
-        #
+        ##################################
         # vertical sequence detection
-        #
+        ##################################
         
-        # loop over board rows
+        # loop over board columns
         for col in range(3):
-            # winning sequence list
-            winning = []
+            # define winning sequence list
+            winning_sequence = []
             
-            # loop over board columns
+            # loop over board rows
             for row in range(3):
-                # found player 2 move
+                # if found same next element in the row
                 if self.position[row, col] == self.player_2:
-                    # append move to winning sequence
-                    winning.append((row, col))
-                
-                # if three in the row
-                if len(winning) == 3:
+                    # update winning sequence
+                    winning_sequence.append((row, col))
+                    
+                # if we have 3 elements in the row
+                if len(winning_sequence) == 3:
+                    # return the game is won state
                     return True
         
-        #
+        ##################################
+        # horizontal sequence detection
+        ##################################
+        
+        # loop over board columns
+        for row in range(3):
+            # define winning sequence list
+            winning_sequence = []
+            
+            # loop over board rows
+            for col in range(3):
+                # if found same next element in the row
+                if self.position[row, col] == self.player_2:
+                    # update winning sequence
+                    winning_sequence.append((row, col))
+                    
+                # if we have 3 elements in the row
+                if len(winning_sequence) == 3:
+                    # return the game is won state
+                    return True
+    
+        ##################################
         # 1st diagonal sequence detection
-        #
+        ##################################
         
-        # winning sequence list
-        winning = []
+        # define winning sequence list
+        winning_sequence = []
         
         # loop over board rows
         for row in range(3):
-            # set col equal to row
+            # init column
             col = row
-                
-            # found player 2 move
+        
+            # if found same next element in the row
             if self.position[row, col] == self.player_2:
-                # append move to winning sequence
-                winning.append((row, col))
-            
-        # if three in the row
-        if len(winning) == 3:
-            return True
+                # update winning sequence
+                winning_sequence.append((row, col))
+                
+            # if we have 3 elements in the row
+            if len(winning_sequence) == 3:
+                # return the game is won state
+                return True
         
-        #
+        ##################################
         # 2nd diagonal sequence detection
-        #
+        ##################################
         
-        # winning sequence list
-        winning = []
+        # define winning sequence list
+        winning_sequence = []
         
         # loop over board rows
         for row in range(3):
-            # set col equal to row
+            # init column
             col = 3 - row - 1
-                
-            # found player 2 move
+        
+            # if found same next element in the row
             if self.position[row, col] == self.player_2:
-                # append move to winning sequence
-                winning.append((row, col))
-            
-        # if three in the row
-        if len(winning) == 3:
-            return True
+                # update winning sequence
+                winning_sequence.append((row, col))
+                
+            # if we have 3 elements in the row
+            if len(winning_sequence) == 3:
+                # return the game is won state
+                return True
         
-        # by defualt
+        # by default return non winning state
         return False
-            
-    # generate moves
-    def generate_moves(self):
-        # init move list
-        moves = []
+    
+    # generate legal moves to play in the current position
+    def generate_states(self):
+        # define states list (move list - list of available actions to consider)
+        actions = []
         
-        # loop over board squares
+        # loop over board rows
         for row in range(3):
             # loop over board columns
             for col in range(3):
-                # make move only if square is empty
+                # make sure that current square is empty
                 if self.position[row, col] == self.empty_square:
-                    # append move to move list
-                    moves.append(self.make_move(col, row))
+                    # append available action/board state to action list
+                    actions.append(self.make_move(row, col))
         
-        # return list of moves
-        return moves
+        # return the list of available actions (board class instances)
+        return actions
     
-    # play versus AI loop
-    def play_ai_loop(self):
-        # print game greetings
-        print('\n\n    Tic Tac Toe by Code Monkey King\n')
-        print('print move in format [column][row]: "0,0" or "exit" to quit\n')
+    # main game loop
+    def game_loop(self):
+        print('\n  Tic Tac Toe by Code Monkey King\n')
+        print('  Type "exit" to quit the game')
+        print('  Move format [x,y]: 1,2 where 1 is column and 2 is row')
         
         # print board
         print(self)
         
-        # get user input
-        user_input = ''
+        # create MCTS instance
+        mcts = MCTS()
                 
         # game loop
-        while True:            
+        while True:
             # get user input
             user_input = input('> ')
-            
+        
             # escape condition
             if user_input == 'exit': break
             
-            # empty input
+            # skip empty input
             if user_input == '': continue
             
-            # parse user input
             try:
-                # extract move coordinates
-                coordinates = user_input.split(',')
-                col = int(coordinates[0]) - 1
-                row = int(coordinates[1]) - 1
-                
-                # move legality checking
+                # parse user input (move format [col, row]: 1,2) 
+                row = int(user_input.split(',')[1]) - 1
+                col = int(user_input.split(',')[0]) - 1
+
+                # check move legality
                 if self.position[row, col] != self.empty_square:
-                    print('Illegal move!')
+                    print(' Illegal move!')
                     continue
-                
-                # make human move
-                self = self.make_move(col, row)
 
-                # create mcts instance
-                mcts = MCTS()
-    
-                # find best move
-                best_move = mcts.search(self)
-
-                # make AI move
-                if best_move:
-                    self = best_move.board
+                # make move on board
+                self = self.make_move(row, col)
                 
                 # print board
                 print(self)
                 
-                # on win
-                if self.is_win():
-                    print('Player "%s" won!' % self.player_2)
-                    self.reset_board()
-                    print(self)
+                # search for the best move
+                best_move = mcts.search(self)
                 
-                # on draw
+                # legal moves available
+                try:
+                    # make AI move here
+                    self = best_move.board
+                
+                # game over
+                except:
+                    pass
+                
+                # print board
+                print(self)
+                
+                # check if the game is won
+                if self.is_win():
+                    print('player "%s" has won the game!\n' % self.player_2)
+                    break
+                
+                # check if the game is drawn
                 elif self.is_draw():
-                    print('Game is drawn!')
-                    self.reset_board()
-                    print(self)
-
+                    print('Game is drawn!\n')
+                    break
+            
             except Exception as e:
-                print(e)
-                print('Illegal command!')        
-    
-    # print board
+                print('  Error:', e)
+                print('  Illegal command!')
+                print('  Move format [x,y]: 1,2 where 1 is column and 2 is row')
+        
+    # print board state
     def __str__(self):
-        # define board string
+        # define board string representation
         board_string = ''
-    
+        
         # loop over board rows
         for row in range(3):
             # loop over board columns
             for col in range(3):
-                # append each square's value to board string
                 board_string += ' %s' % self.position[row, col]
             
+            # print new line every row
             board_string += '\n'
         
-        # if player 'x' to play
+        # prepend side to move
         if self.player_1 == 'x':
-            # prepend player
-            board_string = '\n--------------\n "x" to play:\n--------------\n' + board_string
+            board_string = '\n--------------\n "x" to move:\n--------------\n\n' + board_string
         
-        # if player 'o' to play
         elif self.player_1 == 'o':
-            # prepend player
-            board_string = '\n--------------\n "o" to play:\n--------------\n' + board_string
-        
-        # return board representation as string
+            board_string = '\n--------------\n "o" to move:\n--------------\n\n' + board_string
+                        
+        # return board string
         return board_string
 
+# main driver
 if __name__ == '__main__':
-    # init board instance
+    # create board instance
     board = Board()
     
-    # play versus AI
-    board.play_ai_loop()
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
+    # start game loop
+    board.game_loop()
         
+        
+        
+    
+    
+    
+    
+    
+    
+    
+    
