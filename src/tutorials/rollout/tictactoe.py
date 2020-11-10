@@ -1,7 +1,7 @@
 #
 # AI that learns to play Tic Tac Toe using
 #        reinforcement learning
-#             (MCTS + NN)
+#                (MCTS)
 #
 
 # packages
